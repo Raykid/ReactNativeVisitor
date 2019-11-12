@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "es5",
+    "sourceMap": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": [
+      "es2017",
+    ]
+  },
+  "include": [
+    "ReactNativeVisitor.ts",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
