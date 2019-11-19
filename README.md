@@ -25,8 +25,8 @@ npm install react-native-visitor
 * [获取节点类型](#获取节点类型)
 * [获取后代Visitor](#获取后代Visitor)
 * [获取ReactNode](#获取ReactNode)
-* [获取父对象](#获取父对象)
-* [获取子对象列表](#获取子对象列表)
+* [获取父节点](#获取父节点)
+* [获取子节点列表](#获取子节点列表)
 * [Text组件内文本](#Text组件内文本)
 * [组件参数](#组件参数)
 * [组件样式](#组件样式)
@@ -95,7 +95,7 @@ function render()
 ```
 [[返回目录]](#Tutorial)
 
-## 获取父对象
+## 获取父节点
 调用Visitor的parent属性即可获取父级Visitor。
 
 ```jsx
@@ -108,8 +108,8 @@ console.log(visitor.subContainer.parent === visitor.parentContainer);// true
 ```
 [[返回目录]](#Tutorial)
 
-## 获取子对象列表
-调用Visitor的children属性可以获取容器节点Visitor的所有子对象Visitor数组。
+## 获取子节点列表
+调用Visitor的children属性可以获取容器节点Visitor的所有子节点Visitor数组。
 
 ```jsx
 const visitor = wrapVisitor()(
@@ -124,7 +124,7 @@ console.log(visitor.children);// 返回由三个Text类型Visitor组成的数组
 [[返回目录]](#Tutorial)
 
 ## Text组件内文本
-和获取子对象数组一样，调用Text组件Visitor的children属性，对于Text组件来说，children返回的是字符串而不是数组。如果想修改文本，只需设置它即可。
+和获取子节点数组一样，调用Text组件Visitor的children属性，对于Text组件来说，children返回的是字符串而不是数组。如果想修改文本，只需设置它即可。
 
 ```jsx
 function render()
@@ -381,7 +381,7 @@ function render()
 [[返回目录]](#Tutorial)
 
 ## 子节点API
-通过Visitor提供的子对象API，你可以方便地添加新节点或者移除、移动已有节点。
+通过Visitor提供的子节点API，你可以方便地添加新节点或者移除、移动已有节点。
 
 ```jsx
 function render()
