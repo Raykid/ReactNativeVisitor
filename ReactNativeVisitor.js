@@ -348,6 +348,9 @@ function doWrapVisitor(node, parent) {
             set key(value) {
                 node.key = value;
             },
+            get type() {
+                return node["type"]["displayName"];
+            },
             node: node,
             get props() {
                 return node.props;

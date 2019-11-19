@@ -81,6 +81,7 @@ export interface ReactNodeVisitorFunctions {
 }
 export interface ReactNodeVisitor extends ReactNodeVisitorFunctions {
     key?: string;
+    readonly type: string;
     props: any;
     node: React.ReactNode;
     style: any;

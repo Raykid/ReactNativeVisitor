@@ -7,7 +7,7 @@ ReactNativeVisitor提供给你对jsx语法产生的、无法修改的对象进�
   * 修改节点传入参数；
   * 修改节点样式Style；
   * 增删移动节点；
-  * 通过key获取某节点内部任何一个子孙节点（无需关心嵌套层级）。
+  * 通过key获取某节点内部任何一个后代节点（无需关心嵌套层级）。
 * **此外还友情提供:**
   * 对样式Style的嵌套功能支持，类似sass/less的嵌套样式语法，以及样式的递归混合功能；
   * 对Typescript的支持。
@@ -22,13 +22,15 @@ npm install react-native-visitor
 ## Tutorial
 
 * [生成Visitor](#生成Visitor)
-* [获取子孙Visitor](#获取子孙Visitor)
+* [获取节点类型](#获取节点类型)
+* [获取后代Visitor](#获取后代Visitor)
 * [获取ReactNode](#获取ReactNode)
 * [获取父对象](#获取父对象)
 * [获取子对象列表](#获取子对象列表)
 * [Text组件内文本](#Text组件内文本)
 * [组件参数](#组件参数)
 * [组件样式](#组件样式)
+* [子节点API](#子节点API)
 
 你可以发给我一个[Pull Request](https://github.com/reactjs/reactjs.org)，和我一起完善这个工具。
 
@@ -46,12 +48,26 @@ const visitor = wrapVisitor()(
 ```
 [[返回目录]](#Tutorial)
 
-## 获取子孙Visitor
-你可以通过给子孙对象起名字(key)来为Visitor提供访问依据，该功能忽略层级嵌套，如下。
+## 获取节点类型
+可以通过Visitor提供的type属性获取到该Visitor对应的节点类型，type是个字符串。
 
 ```jsx
 import { wrapVisitor } from 'react-native-visitor';
 
+const visitor = wrapVisitor()(
+    <View>
+        <Text key="text">Hello ReactNativeVisitor!</Text>
+    </View>
+    console.log(visitor.type);// View
+    console.log(visitor.text.type)// Text
+);
+```
+[[返回目录]](#Tutorial)
+
+## 获取后代Visitor
+你可以通过给后代节点起名字(key)来为Visitor提供访问依据，该功能忽略层级嵌套，如下。
+
+```jsx
 const visitor = wrapVisitor()(
     <View key="depth_0">
         <View key="depth_1">
@@ -85,7 +101,12 @@ function render()
 调用Visitor的parent属性即可获取父级Visitor。
 
 ```jsx
-console.log(visitor.parent);
+const visitor = wrapVisitor()(
+    <View key="parentContainer">
+        <View key="subContainer"/>
+    </View>
+);
+console.log(visitor.subContainer.parent === visitor.parentContainer);// true
 ```
 [[返回目录]](#Tutorial)
 
@@ -93,7 +114,14 @@ console.log(visitor.parent);
 调用Visitor的children属性可以获取容器节点Visitor的所有子对象Visitor数组。
 
 ```jsx
-console.log(visitor.children);
+const visitor = wrapVisitor()(
+    <View>
+        <Text>第一行文本</Text>
+        <Text>第二行文本</Text>
+        <Text>第三行文本</Text>
+    </View>
+);
+console.log(visitor.children);// 返回由三个Text类型Visitor组成的数组
 ```
 [[返回目录]](#Tutorial)
 
@@ -103,10 +131,10 @@ console.log(visitor.children);
 ```jsx
 function render()
 {
-    const textVisitor = wrapVisitor()(<Text>我是文本</Text>);
-    console.log(textVisitor.children);// 我是文本
-    textVisitor.children = "我是新的文本";
-    return textVisitor.node;// 界面上将渲染“我是新的文本”这行字
+    const visitor = wrapVisitor()(<Text>我是文本</Text>);
+    console.log(visitor.children);// 我是文本
+    visitor.children = "我是新的文本";
+    return visitor.node;// 界面上将渲染“我是新的文本”这行字
 }
 ```
 [[返回目录]](#Tutorial)
@@ -139,6 +167,144 @@ function render()
 }
 ```
 ReactNodeVisitor还额外提供了类似于sass/less的样式组织工具方法库，会在后面详细加入到文档中来，敬请期待。
+
+## 子节点API
+通过Visitor提供的子对象API，你可以方便地添加新节点或者移除、移动已有节点。
+
+```jsx
+function render()
+{
+    const visitor = wrapVisitor()(
+        <View>
+            <Text key="text1">文本1</Text>
+            <Text key="text2">文本2</Text>
+            <Text key="text3">文本3</Text>
+        </View>
+    );
+    // 添加节点，addChild可以直接接收ReactNode，后面它会被转换为子Visitor
+    visitor.addChild(<Text key="text5">我是新增的文本5</Text>);
+    // 按索引添加节点，你也可以传递一个Visitor，和直接传递ReactNode是一样的
+    const insertVisitor = wrapVisitor()(
+        <Text key="text4">我是插入的文本4</Text>
+    );
+    visitor.addChildAt(insertVisitor, 3);
+    // 移除节点
+    visitor.removeChild(visitor.text3);
+    // 替换节点
+    visitor.replace(<Text>我是新的文本2</Text>, visitor.text2);
+    // 返回node
+    return visitor.node;
+    // 这样下来实际的显示会和以下代码生成的一样
+    /*
+        <View>
+            <Text key="text1">文本1</Text>
+            <Text>我是新的文本2</Text>
+            <Text key="text4">我是插入的文本4</Text>
+            <Text key="text5">我是新增的文本5</Text>
+        </View>
+    */
+}
+```
+### 全部子节点API包括：
+```
+/**
+ * 查看是否含有某个子节点
+ *
+ * @param {ReactNodeVisitor} child 要测试的子节点Visitor
+ * @returns {boolean} 是否含有该节点
+ */
+hasChild(child:ReactNodeVisitor):boolean;
+
+/**
+ * 获取子节点索引
+ *
+ * @param {ReactNodeVisitor} child 子节点Visitor
+ * @returns {number} 子节点索引
+ */
+getChildIndex(child:ReactNodeVisitor):number;
+
+/**
+ * 获取指定索引处的子节点Visitor
+ *
+ * @param {number} index 指定索引
+ * @returns {ReactNodeVisitor} 获取到的子节点Visitor
+ */
+getChildAt(index:number):ReactNodeVisitor;
+
+/**
+ * 添加显示节点
+ *
+ * @param {(ReactNodeVisitor|React.ReactNode)} child 要添加的显示节点，支持ReactNode或Visitor
+ * @returns {ReactNodeVisitor} 添加的节点Visitor
+ */
+addChild(child:ReactNodeVisitor|React.ReactNode):ReactNodeVisitor;
+
+/**
+ * 在指定索引处添加显示节点
+ *
+ * @param {(ReactNodeVisitor|React.ReactNode)} child 要添加的显示节点，支持ReactNode或Visitor
+ * @param {number} index 要添加到的索引
+ * @returns {ReactNodeVisitor} 添加的节点Visitor
+ */
+addChildAt(child:ReactNodeVisitor|React.ReactNode, index:number):ReactNodeVisitor;
+
+/**
+ * 在某个已有子节点前面插入显示节点
+ *
+ * @param {(ReactNodeVisitor|React.ReactNode)} child 要添加的显示节点，支持ReactNode或Visitor
+ * @param {ReactNodeVisitor} refChild 已有节点Visitor
+ * @returns {ReactNodeVisitor} 添加的节点Visitor
+ */
+addChildBefore(child:ReactNodeVisitor|React.ReactNode, refChild:ReactNodeVisitor):ReactNodeVisitor;
+
+/**
+ * 在某个已有子节点后面插入显示节点
+ *
+ * @param {(ReactNodeVisitor|React.ReactNode)} child 要添加的显示节点，支持ReactNode或Visitor
+ * @param {ReactNodeVisitor} refChild 已有节点Visitor
+ * @returns {ReactNodeVisitor} 添加的节点Visitor
+ */
+addChildAfter(child:ReactNodeVisitor|React.ReactNode, refChild:ReactNodeVisitor):ReactNodeVisitor;
+
+/**
+ * 将自身从父容器中移除
+ *
+ * @returns {ReactNodeVisitor} 返回被移除的节点Visitor
+ */
+remove():ReactNodeVisitor;
+
+/**
+ * 移除一个子节点
+ *
+ * @param {ReactNodeVisitor} child 要移除的子节点Visitor
+ * @returns {ReactNodeVisitor} 被移除的节点Visitor
+ */
+removeChild(child:ReactNodeVisitor):ReactNodeVisitor;
+
+/**
+ * 移除指定索引处的子节点
+ *
+ * @param {number} index 要移除的子节点索引
+ * @returns {ReactNodeVisitor} 被移除的节点Visitor
+ */
+removeChildAt(index:number):ReactNodeVisitor;
+
+/**
+ * 清空子节点
+ *
+ * @returns {ReactNodeVisitor[]} 被移除的字节点Visitor列表
+ */
+removeChildren():ReactNodeVisitor[];
+
+/**
+ * 替换子节点
+ *
+ * @param {(ReactNodeVisitor|React.ReactNode)} child 要替换成的子节点，支持ReactNode或Visitor
+ * @param {ReactNodeVisitor} refChild 要被替换的子节点Visitor
+ * @returns {ReactNodeVisitor} 返回被添加的节点Visitor
+ */
+replace(child:ReactNodeVisitor|React.ReactNode, refChild:ReactNodeVisitor):ReactNodeVisitor;
+```
 
 [[返回目录]](#Tutorial)
 
