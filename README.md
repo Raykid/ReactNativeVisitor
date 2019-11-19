@@ -52,8 +52,6 @@ const visitor = wrapVisitor()(
 可以通过Visitor提供的type属性获取到该Visitor对应的节点类型，type是个字符串。
 
 ```jsx
-import { wrapVisitor } from 'react-native-visitor';
-
 const visitor = wrapVisitor()(
     <View>
         <Text key="text">Hello ReactNativeVisitor!</Text>
@@ -166,7 +164,221 @@ function render()
     return visitor.node;// 最终“我是一段文字”会被渲染成红色
 }
 ```
-ReactNodeVisitor还额外提供了类似于sass/less的样式组织工具方法库，会在后面详细加入到文档中来，敬请期待。
+在样式方面，ReactNodeVisitor还额外提供了类似于sass/less的完整解决方案，其中包括：
+* [创建样式表](#创建样式表)
+* [合并样式](#合并样式)
+* [交叉合并样式](#交叉合并样式)
+* [附加样式](#附加样式)
+* [附加内容样式](#附加内容样式)
+
+### 创建样式表
+ReactNodeVisitor提供一个createStyleSheet方法，可以替换掉React Native原始的StyleSheet.create方法，用于支持样式多层嵌套功能。
+```jsx
+import { createStyleSheet } from 'react-native-visitor';
+
+function render()
+{
+    // 声明一个含有任意层级结构的样式表对象
+    const styles = createStyleSheet({
+        root: {
+            width: "100%",
+            height: "100%",
+
+            // 这就是个嵌套的样式结构
+            text1: {
+                color: "black",
+                fontWeight: "500"
+            },
+
+            // 这是第二个嵌套的样式结构
+            second: {
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+
+                // 它里面还有一层嵌套的样式结构
+                text2: {
+                    color: "red"
+                }
+            }
+        }
+    });
+    // 在书写结构时按照层级结构赋值样式，让结构更清晰
+    return <View style={styles.root}>
+        <Text style={styles.root.text1}>文本1</Text>
+        <View style={styles.root.second}>
+            <Text style={styles.root.second.text2}>文本2</Text>
+        </View>
+    </View>;
+}
+```
+
+### 合并样式
+mergeStyles方法允许你将多个样式对象进行合并，得出一个样式对象，所有内嵌的同名样式都会***递归***地被合并。如下：
+```jsx
+import { createStyleSheet, mergeStyles } from 'react-native-visitor';
+
+function render()
+{
+    // 这是第一个样式表
+    const style1 = createStyleSheet({
+        root: {
+            width: "100%",
+    
+            text: {
+                fontSize: 30
+            }
+        }
+    });
+    // 这是第二个样式表
+    const style2 = createStyleSheet({
+        root: {
+            height: 200,
+    
+            text: {
+                color: "red"
+            }
+        }
+    });
+    // 这是合并后的样式表
+    const mergeRoot = mergeStyles(style1.root, style2.root);
+    // 使用合并后的样式表书写结构
+    return <View style={mergeRoot}>
+        <Text style={mergeRoot.text}>文本</Text>
+    </View>;
+    // 最后得到的样式表形如
+    /*
+        {
+            root: {
+                width: "100%",
+                height: 200,
+    
+                text: {
+                    fontSize: 30,
+                    color: "red"
+                }
+            }
+        }
+    */
+}
+```
+
+### 交叉合并样式
+有这样一个需求，整个页面有正常、正确和错误3个状态，页面中有一个按钮，正常是黄色的。当页面状态为正确时，按钮背景要变成绿色，反之当页面状态为错误时，按钮背景要变成红色。
+
+交叉合并功能就是为了解决这样的问题而诞生的，它模仿的是sass/less中的并列样式功能。
+
+交叉合并用到的方法为crossMergeStyles。下面的例子就说明了crossMergeStyles是如何给一个样式赋上状态的。
+```jsx
+import { createStyleSheet, crossMergeStyles } from 'react-native-visitor';
+
+function render()
+{
+    const styles = createStyleSheet({
+        root: {
+            width: "100%",
+            height: "100%",
+
+            button: {
+                position: "absolute",
+                bottom: 100,
+                width: 200,
+                height: 100,
+                backgroundColor: "yellow",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+
+                text: {
+                    fontSize: 30,
+                    color: "black",
+                }
+            },
+
+            // 这个是root为正确状态下的样式结构
+            _right: {
+                button: {
+                    backgroundColor: "green",
+
+                    text: {
+                        color: "white"
+                    }
+                }
+            },
+
+            // 这个是root为错误状态下的样式结构
+            _wrong: {
+                button: {
+                    backgroundColor: "red",
+
+                    text: {
+                        color: "white"
+                    }
+                }
+            }
+        }
+    });
+    // 假设有一个isRight变量可以获取到页面状态
+    // crossMergeStyles方法第二个参数接收一个字符串数组，字符串都是某个样式节点的状态名
+    // 样式的状态名必须是该层样式的第一级子样式。一般都用下划线作为前缀，标明它是个状态，而不是一个嵌套结构，但这不是必须的，你完全可以自己决定前缀或者完全没有前缀（这将不太好管理）。
+    const mergeRoot = crossMergeStyles(styles.root, [
+        isRight && "_right",
+        !isRight && "_wrong"
+    ]);
+    return <View style={mergeRoot}>
+        <View style={mergeRoot.button}>
+            <Text style={mergeRoot.button.text}>点我</Text>
+        </View>
+    </View>;
+    // 这样当isRight为true时，你会看到按钮变成了绿底白字，而当isRight为false时，按钮则变成了红底白字。
+}
+```
+交叉合并样式几乎是开发界面时最常用的方法，因为通常页面或者组件都需要维护多个不同的状态，如果为每个状态都写一个完整的样式结构将会非常麻烦，特别是当样式不支持嵌套时……
+
+### 附加样式
+上面几个方法都可以脱离Visitor体系使用。但如果你使用Visitor体系开发，则appendStyles可以让你快速给一个已经有样式的Visitor增加新的样式。
+```jsx
+import { createStyleSheet, crossMergeStyles, appendStyles } from 'react-native-visitor';
+
+function render()
+{
+    // 假设这是我从其他地方获取到的Visitor
+    const visitor = wrapVisitor()(
+        <View>
+            <Text key="text" style={{color: "red"}}>文本</Text>
+        </View>
+    );
+    // 我希望让Text组件的字体加粗，我可以这么干
+    // 第一个参数给要附加样式的Visitor，这里是visitor.text
+    // 第二个参数就是要附加的样式结构
+    appendStyles(visitor.text, {
+        fontWeight: "bold"
+    });
+    // 当然你也可以使用上面提到的任何方法修改你需要的样式，然后再附加上去
+    const styles = createStyleSheet({
+        fontWeight: "bold",
+
+        _right: {
+            color: "green"
+        },
+
+        _wrong: {
+            color: "red"
+        }
+    });
+    appendStyles(visitor.text, crossMergeStyles(styles, [
+        isRight && "_right",
+        !isRight && "_wrong"
+    ]));
+    // 返回修改后的结构
+    return visitor.node;
+}
+```
+
+### 附加内容样式
+这个和附加样式差不多，只不过ScrollView系列组件有两个样式(style和contentContainerStyle)，appendContentContainerStyles就是针对后者的附加样式。如果你拿到的Visitor是ScrollView、ListView、FlatList，则用这个方法可以给组件内部容器增加样式。
+
+[[返回目录]](#Tutorial)
 
 ## 子节点API
 通过Visitor提供的子对象API，你可以方便地添加新节点或者移除、移动已有节点。
@@ -206,7 +418,7 @@ function render()
 }
 ```
 ### 全部子节点API包括：
-```
+```ts
 /**
  * 查看是否含有某个子节点
  *

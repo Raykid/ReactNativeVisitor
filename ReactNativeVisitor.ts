@@ -350,6 +350,8 @@ function isVisitor(target:any):boolean
 {
     return target != null &&
         target.hasOwnProperty("key") &&
+        target.hasOwnProperty("type") &&
+        target.hasOwnProperty("props") &&
         target.hasOwnProperty("node") &&
         target.hasOwnProperty("style") &&
         target.hasOwnProperty("children") &&

@@ -192,6 +192,8 @@ export function appendContentContainerStyles(target) {
 function isVisitor(target) {
     return target != null &&
         target.hasOwnProperty("key") &&
+        target.hasOwnProperty("type") &&
+        target.hasOwnProperty("props") &&
         target.hasOwnProperty("node") &&
         target.hasOwnProperty("style") &&
         target.hasOwnProperty("children") &&
@@ -233,7 +235,7 @@ var visitorFunctions = {
             return null;
         }
         if (typeof this.children === "string") {
-            throw new Error("非容器节点不能添加子对象");
+            throw new Error("非容器节点不能添加子节点");
         }
         // 处理边界情况
         if (index < 0)
