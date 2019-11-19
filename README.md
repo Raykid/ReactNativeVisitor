@@ -56,9 +56,9 @@ const visitor = wrapVisitor()(
     <View>
         <Text key="text">Hello ReactNativeVisitor!</Text>
     </View>
-    console.log(visitor.type);// View
-    console.log(visitor.text.type)// Text
 );
+console.log(visitor.type);// View
+console.log(visitor.text.type)// Text
 ```
 [[返回目录]](#Tutorial)
 
