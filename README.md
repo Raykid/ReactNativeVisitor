@@ -32,7 +32,7 @@ npm install react-native-visitor
 * [组件样式](#组件样式)
 * [子节点API](#子节点API)
 
-你可以发给我一个[Pull Request](https://github.com/reactjs/reactjs.org)，和我一起完善这个工具。
+你可以发给我一个[Pull Request](https://github.com/Raykid/ReactNativeVisitor/pulls)，和我一起完善这个工具。
 
 ## 生成Visitor
 使用wrapVisitor方法可以很轻松地生成一个访问器对象，仅需在jsx代码外部包裹一层方法调用即可，如下。
