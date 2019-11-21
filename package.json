@@ -27,13 +27,12 @@
     "url": "https://github.com/Raykid/ReactNativeVisitor/issues"
   },
   "homepage": "https://github.com/Raykid/ReactNativeVisitor#readme",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "@types/react": "^16.9.11",
     "@types/react-native": "^0.60.22",
-    "react": "^16.11.0",
-    "react-native": "^0.61.4"
-  },
-  "devDependencies": {
+    "react": "^16.12.0",
+    "react-native": "^0.61.4",
     "typescript": "^3.7.2"
   }
 }
