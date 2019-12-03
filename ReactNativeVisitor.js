@@ -24,7 +24,7 @@ function handleStyleSheet(style) {
             });
         }
     }
-    return style;
+    return mergeStyles(style);
 }
 /**
  * 创建一个可嵌套的样式表

@@ -23,7 +23,7 @@ function handleStyleSheet<T = any>(style:T):T
             });
         }
     }
-    return style;
+    return mergeStyles(style) as T;
 }
 
 export type Style = ViewStyle | TextStyle | ImageStyle;
