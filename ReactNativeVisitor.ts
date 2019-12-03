@@ -43,7 +43,7 @@ export function createStyleSheet<T extends StyleSheet.NamedStyles<T> | StyleShee
     // 遍历styles
     for(let name in styles)
     {
-        handleStyleSheet(styles[name]);
+        styles[name] = handleStyleSheet(styles[name]);
     }
     // 返回处理后的值
     return StyleSheet.create(styles);

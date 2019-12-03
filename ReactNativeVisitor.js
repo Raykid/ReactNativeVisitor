@@ -39,7 +39,7 @@ function handleStyleSheet(style) {
 export function createStyleSheet(styles) {
     // 遍历styles
     for (var name in styles) {
-        handleStyleSheet(styles[name]);
+        styles[name] = handleStyleSheet(styles[name]);
     }
     // 返回处理后的值
     return StyleSheet.create(styles);
